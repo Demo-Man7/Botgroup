@@ -1,7 +1,7 @@
 from datetime import datetime
 import pytz
 from pyrogram import Client, enums
-from pyrogram.types import ChatMemberUpdated, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import ChatMemberUpdated
 from logger import log_event
 
 @Client.on_chat_member_updated()
@@ -16,7 +16,7 @@ async def welcome_handler(client: Client, chat_member: ChatMemberUpdated):
     chat = chat_member.chat
     user = new_m.user
 
-    
+    # 1. Bot ကိုယ်တိုင် Group ထဲ အထည့်ခံရ (သို့) ရောက်သွားချိန် Log မှတ်ရန်
     if user.id == client.me.id:
         if old_m and old_m.status in [enums.ChatMemberStatus.MEMBER, enums.ChatMemberStatus.RESTRICTED]:
             return
@@ -32,7 +32,7 @@ async def welcome_handler(client: Client, chat_member: ChatMemberUpdated):
         await log_event(client, log_text)
         return
 
-    
+    # 2. Member အသစ်များ Group ထဲ ဝင်လာချိန် Welcome ပို့ရန်
     if new_m.status in [enums.ChatMemberStatus.MEMBER, enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]:
         
         if user.is_bot:
@@ -40,7 +40,7 @@ async def welcome_handler(client: Client, chat_member: ChatMemberUpdated):
 
         user_mention = f"<a href='tg://user?id={user.id}'>{user.first_name}</a>"
         
-        
+        # Yangon Time Zone သတ်မှတ်ခြင်း
         yangon_tz = pytz.timezone("Asia/Yangon")
         current_time = datetime.now(yangon_tz).strftime("%I:%M:%S %p")
         
@@ -53,15 +53,11 @@ async def welcome_handler(client: Client, chat_member: ChatMemberUpdated):
             f"<tg-emoji emoji-id='4972172205652706288'>🤍</tg-emoji><tg-emoji emoji-id='4974451085235192775'>🤍</tg-emoji><tg-emoji emoji-id='4972061468510913587'>🤍</tg-emoji><tg-emoji emoji-id='4972370753400865760'>🤍</tg-emoji><tg-emoji emoji-id='4972135526631999147'>🤍</tg-emoji>"
         )
         
-       # keyboard = InlineKeyboardMarkup([
-        #    [InlineKeyboardButton(" ရည်းစားရှာရန် နှိပ်ပါ ", url="https://t.me/Bika_Mus_ic_Bot")]
-       # ])
-        
         try:
+            # Button မပါတော့ဘဲ စာသားသက်သက် ပို့ပါမည်
             await client.send_message(
                 chat.id, 
                 welcome_text, 
-                reply_markup=keyboard, 
                 parse_mode=enums.ParseMode.HTML
             )
         except Exception as e:
