@@ -1,8 +1,8 @@
 import json
 import os
 import asyncio
-from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram import Client, filters, enums
+from pyrogram.types import Message, ChatMemberUpdated
 from config import OWNER_ID
 
 DATA_FILE = "users.json"
@@ -33,16 +33,19 @@ async def save_user(client: Client, message: Message):
         save_data(data)
 
 
-# ⭐ [အဓိက အပြောင်းအလဲ] Bot ကို Group ထဲ ရှိနေသမျှ (သို့) ထည့်လိုက်သည်နှင့် ချက်ချင်း Group ID သိမ်းပေးမည့် Event
-@Client.on_my_chat_member_updated(group=10)
-async def auto_save_chat(client: Client, chat_member):
-    # Bot ကို Group ထဲ ထည့်လိုက်ချိန် (သို့) Bot က Group ထဲမှာ ရှိနေဆဲဖြစ်ကြောင်း သိရှိချိန်
-    if chat_member.new_chat_member and chat_member.new_chat_member.status in ["member", "administrator"]:
-        data = load_data()
-        chat_id = chat_member.chat.id
-        if chat_id not in data["chats"]:
-            data["chats"].append(chat_id)
-            save_data(data)
+# ⭐ [အမှန်ကန်ဆုံး ပြင်ဆင်ချက်] Bot ကိုယ်တိုင် Group ထဲ ထည့်ခံရချိန် Group ID များကို ချက်ချင်းသိမ်းပေးမည့် Event
+@Client.on_chat_member_updated(group=10)
+async def auto_save_chat(client: Client, chat_member: ChatMemberUpdated):
+    new_m = getattr(chat_member, "new_chat_member", None) or getattr(chat_member, "new_member", None)
+    
+    # Bot ကိုယ်တိုင် Group ထဲ ရောက်လာခြင်း (သို့) Admin ခန့်ခံရခြင်း ရှိမရှိ စစ်ဆေးခြင်း
+    if new_m and new_m.user.id == client.me.id:
+        if new_m.status in [enums.ChatMemberStatus.MEMBER, enums.ChatMemberStatus.ADMINISTRATOR]:
+            data = load_data()
+            chat_id = chat_member.chat.id
+            if chat_id not in data["chats"]:
+                data["chats"].append(chat_id)
+                save_data(data)
 
 
 # Broadcast ပြုလုပ်သည့် Command
